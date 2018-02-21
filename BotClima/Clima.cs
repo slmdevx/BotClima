@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-//using
-using System.Net.Http;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ClimaBot
 {
-    public partial class Welcome
+    public partial class Deserialize
     {
         [JsonProperty("id")]
         public long Id { get; set; }
@@ -173,5 +167,22 @@ namespace ClimaBot
         public string Direction { get; set; }
     }
 
-    
+    public partial class Deserialize
+    {
+        public static Deserialize FromJson(string json) => JsonConvert.DeserializeObject<Deserialize>(json, ClimaBot.Converter.Settings);
+    }
+
+    public static class Serialize
+    {
+        public static string ToJson(this Deserialize self) => JsonConvert.SerializeObject(self, ClimaBot.Converter.Settings);
+    }
+
+    public class Converter
+    {
+        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        {
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            DateParseHandling = DateParseHandling.None,
+        };
+    }
 }
