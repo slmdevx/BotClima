@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Routing;
 
-namespace BotClima
+namespace ClimaBot
 {
     public class WebApiApplication : System.Web.HttpApplication
     {

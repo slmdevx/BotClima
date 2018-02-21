@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
-namespace BotClima.Dialogs
+namespace ClimaBot.Dialogs
 {
     [Serializable]
     public class RootDialog : IDialog<object>
