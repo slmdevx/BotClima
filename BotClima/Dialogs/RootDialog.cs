@@ -41,9 +41,9 @@ namespace ClimaBot.Dialogs
                         if (response.IsSuccessStatusCode)
                         {
                             string cityJsonString = await response.Content.ReadAsStringAsync();
-                            cityJsonString = cityJsonString.Replace("[", "");
-                            cityJsonString = cityJsonString.Replace("]", "");
-                            var citydata = JsonConvert.DeserializeObject<Deserialize>(cityJsonString);
+                            cityJsonString = cityJsonString.Replace("[", "").Replace("]","");
+
+                            var citydata = Deserialize.FromJson(cityJsonString);
                             var id = citydata.Id;
 
                             var uriForeCast = $"http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/{id}/days/15?token=ce32a735c1d3d1a0c93313c53af6e011";
@@ -53,15 +53,15 @@ namespace ClimaBot.Dialogs
                                 {
                                     if (respForeCast.IsSuccessStatusCode)
                                     {
-                                        var dataJsonString = await respForeCast.Content.ReadAsStringAsync();
-                                        var welcome = Deserialize.FromJson(dataJsonString);
+                                        var forecastDataJsonString = await respForeCast.Content.ReadAsStringAsync();
+                                        var forecast = Deserialize.FromJson(forecastDataJsonString);
                                         await context.PostAsync($"Previsão do tempo para {city}, {state}");
                                         for(int days = 0; days < numDaysForecast; days++)
                                         {
-                                            await context.PostAsync($"Data: {welcome.Data[days].DateBr}");
-                                            await context.PostAsync($"Humidade - Mínima: {welcome.Data[days].Humidity.Min}; Máxima: {welcome.Data[days].Humidity.Max}");
-                                            await context.PostAsync($"Chuva - Precipitação: {welcome.Data[days].Rain.Precipitation}; Probabilidade: {welcome.Data[days].Rain.Probability}%");
-                                            await context.PostAsync($"Temperatura - Mínima: {welcome.Data[days].Temperature.Min}°; Máxima: {welcome.Data[days].Temperature.Max}°");
+                                            await context.PostAsync($"Data: {forecast.Data[days].DateBr}");
+                                            await context.PostAsync($"Humidade - Mínima: {forecast.Data[days].Humidity.Min}; Máxima: {forecast.Data[days].Humidity.Max}");
+                                            await context.PostAsync($"Chuva - Precipitação: {forecast.Data[days].Rain.Precipitation}; Probabilidade: {forecast.Data[days].Rain.Probability}%");
+                                            await context.PostAsync($"Temperatura - Mínima: {forecast.Data[days].Temperature.Min}°; Máxima: {forecast.Data[days].Temperature.Max}°");
                                         }                                        
                                     }
                                 }
@@ -72,7 +72,7 @@ namespace ClimaBot.Dialogs
             }
             else
             {
-                await context.PostAsync("Formato: Cidade, Estado/nExemplo: Rio de Janeiro, RJ");
+                await context.PostAsync("SLM Clima Bot. Previsão do tempo para os próximos 3 dias. Exemplo: Rio de Janeiro, RJ");
             }         
 
             context.Wait(MessageReceivedAsync);
