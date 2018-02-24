@@ -128,7 +128,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Clima.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
-    <Compile Include="Dialogs\RootDialog.cs" />
+    <Compile Include="Dialogs\LocalidadeDialog.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

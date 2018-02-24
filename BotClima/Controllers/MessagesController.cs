@@ -20,7 +20,7 @@ namespace ClimaBot
             {
                 // Supressing the POST 15s Timeout error in some channels.
                 //await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
-                await Task.Factory.StartNew(() => Conversation.SendAsync(activity, () => new Dialogs.RootDialog()));
+                await Task.Factory.StartNew(() => Conversation.SendAsync(activity, () => new Dialogs.LocalidadeDialog()));
             }
             else
             {
