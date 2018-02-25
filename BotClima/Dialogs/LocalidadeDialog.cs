@@ -7,6 +7,8 @@ using Microsoft.Bot.Builder.Luis.Models;
 //using
 using System.Collections.Generic;
 using System.Net.Http;
+using Newtonsoft.Json;
+using System.Web.Script.Serialization;
 
 namespace ClimaBot.Dialogs
 {
@@ -34,44 +36,61 @@ namespace ClimaBot.Dialogs
             context.Wait(MessageReceived);
         }
 
+        public bool TryFindTitle(LuisResult result, out ICollection<object> title)
+        {
+            if (result.TryFindEntity("city", out EntityRecommendation entity))
+            {
+                title = entity.Resolution.Values;
+                return true;
+            }
+            title = null;
+            return false;
+        }
+
         [LuisIntent("BuscaPrevisao")]
         public async Task BuscaPrevisao(IDialogContext context, LuisResult result)
-        {          
-            IEnumerable<String> searchResult= result.Entities?.Select(e => e.Entity);
-            List<string> listResult = searchResult.ToList();
-            city = listResult[0];
-            state = listResult[1];
-            await context.PostAsync($"Obtendo informações para {city}, {state}");
-
-            var uri = $"http://apiadvisor.climatempo.com.br/api/v1/locale/city?name={city}&state={state}&token=ce32a735c1d3d1a0c93313c53af6e011";
-            using (var client = new HttpClient())
+        {
+            if (result.TryFindEntity("city", out EntityRecommendation entity))
             {
-                using (var response = await client.GetAsync(uri))
+                city = entity.Entity.ToString();
+                if (entity.Resolution.Count>0)
                 {
-                    if (response.IsSuccessStatusCode)
+                    entity.Resolution.TryGetValue("values", out object objstate);
+                    string JSonState = JsonConvert.SerializeObject(objstate);
+                    List<string> stateList = (List<string>)JsonConvert.DeserializeObject(JSonState, typeof(List<string>));
+                    state = stateList[0].ToString();
+                    await context.PostAsync($"Obtendo informações para {city}, {state}");
+                    var uri = $"http://apiadvisor.climatempo.com.br/api/v1/locale/city?name={city}&state={state}&token=ce32a735c1d3d1a0c93313c53af6e011";
+                    using (var client = new HttpClient())
                     {
-                        string cityJsonString = await response.Content.ReadAsStringAsync();
-                        cityJsonString = cityJsonString.Replace("[", "").Replace("]", "");
-
-                        var citydata = Deserialize.FromJson(cityJsonString);
-                        var id = citydata.Id;
-
-                        var uriForeCast = $"http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/{id}/days/15?token=ce32a735c1d3d1a0c93313c53af6e011";
-                        using (var cliForeCast = new HttpClient())
+                        using (var response = await client.GetAsync(uri))
                         {
-                            using (var respForeCast = await cliForeCast.GetAsync(uriForeCast))
+                            if (response.IsSuccessStatusCode)
                             {
-                                if (respForeCast.IsSuccessStatusCode)
+                                string cityJsonString = await response.Content.ReadAsStringAsync();
+                                cityJsonString = cityJsonString.Replace("[", "").Replace("]", "");
+
+                                var citydata = Deserialize.FromJson(cityJsonString);
+                                var id = citydata.Id;
+
+                                var uriForeCast = $"http://apiadvisor.climatempo.com.br/api/v1/forecast/locale/{id}/days/15?token=ce32a735c1d3d1a0c93313c53af6e011";
+                                using (var cliForeCast = new HttpClient())
                                 {
-                                    var forecastDataJsonString = await respForeCast.Content.ReadAsStringAsync();
-                                    var forecast = Deserialize.FromJson(forecastDataJsonString);
-                                    await context.PostAsync($"Previsão do tempo para {city}, {state}");
-                                    for (int days = 0; days < numDaysForecast; days++)
+                                    using (var respForeCast = await cliForeCast.GetAsync(uriForeCast))
                                     {
-                                        await context.PostAsync($"Data: {forecast.Data[days].DateBr}");
-                                        await context.PostAsync($"Humidade - Mínima: {forecast.Data[days].Humidity.Min}; Máxima: {forecast.Data[days].Humidity.Max}");
-                                        await context.PostAsync($"Chuva - Precipitação: {forecast.Data[days].Rain.Precipitation}; Probabilidade: {forecast.Data[days].Rain.Probability}%");
-                                        await context.PostAsync($"Temperatura - Mínima: {forecast.Data[days].Temperature.Min}°; Máxima: {forecast.Data[days].Temperature.Max}°");
+                                        if (respForeCast.IsSuccessStatusCode)
+                                        {
+                                            var forecastDataJsonString = await respForeCast.Content.ReadAsStringAsync();
+                                            var forecast = Deserialize.FromJson(forecastDataJsonString);
+                                            await context.PostAsync($"Previsão do tempo para {city}, {state}");
+                                            for (int days = 0; days < numDaysForecast; days++)
+                                            {
+                                                await context.PostAsync($"Data: {forecast.Data[days].DateBr}");
+                                                await context.PostAsync($"Humidade - Mínima: {forecast.Data[days].Humidity.Min}; Máxima: {forecast.Data[days].Humidity.Max}");
+                                                await context.PostAsync($"Chuva - Precipitação: {forecast.Data[days].Rain.Precipitation}; Probabilidade: {forecast.Data[days].Rain.Probability}%");
+                                                await context.PostAsync($"Temperatura - Mínima: {forecast.Data[days].Temperature.Min}°; Máxima: {forecast.Data[days].Temperature.Max}°");
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -79,6 +98,8 @@ namespace ClimaBot.Dialogs
                     }
                 }
             }
+
+
         }
     }
 }
