@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Luis;
@@ -8,7 +7,6 @@ using Microsoft.Bot.Builder.Luis.Models;
 using System.Collections.Generic;
 using System.Net.Http;
 using Newtonsoft.Json;
-using System.Web.Script.Serialization;
 
 namespace ClimaBot.Dialogs
 {
@@ -33,7 +31,11 @@ namespace ClimaBot.Dialogs
         [LuisIntent("Sobre")]
         public async Task Sobre(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("Este aplicativo foi desenvolvido por Sergio Luiz Machado para a maratona de programação Bots.");
+            string aboutString = string.Format("SLMClimaBot v0.1>>>>Maratona Bots Brasil\n\r");
+            aboutString = aboutString + string.Format("Desenvolvido por Sergio Luiz Machado\n\r");
+            aboutString = aboutString + string.Format("Telegram: @SLMClimaBot\n\r");
+            aboutString = aboutString + string.Format("Skype: https://join.skype.com/bot/0674751f-91d7-467a-b425-bcf354018896\n\r");
+            await context.PostAsync(aboutString);
             context.Wait(MessageReceived);
         }
 
@@ -47,9 +49,10 @@ namespace ClimaBot.Dialogs
                 {
                     entity.Resolution.TryGetValue("values", out object objstate);
                     string JSonState = JsonConvert.SerializeObject(objstate);
-                    List<string> stateList = (List<string>)JsonConvert.DeserializeObject(JSonState, typeof(List<string>));
-                    state = stateList[0].ToString();
-                    await context.PostAsync($"Obtendo informações para {city}, {state}");
+                    List<string> states = (List<string>)JsonConvert.DeserializeObject(JSonState, typeof(List<string>));
+                    state = states[0].ToString();
+
+                    await context.PostAsync($"Procurando...");
                     var uri = $"http://apiadvisor.climatempo.com.br/api/v1/locale/city?name={city}&state={state}&token=ce32a735c1d3d1a0c93313c53af6e011";
                     using (var client = new HttpClient())
                     {
