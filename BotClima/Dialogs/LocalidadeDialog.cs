@@ -12,13 +12,14 @@ using System.Web.Script.Serialization;
 
 namespace ClimaBot.Dialogs
 {
-    [LuisModel("2fed9e6e-0061-4cf0-a4fc-59bb78bcca0d", "3bf3531c2c834a39a7c4de1052cee987")]
     [Serializable]
     public class LocalidadeDialog : LuisDialog<object>  
     {
         private string city;
         private string state;
         private const int numDaysForecast = 3;
+
+        public LocalidadeDialog(ILuisService service) : base(service) { }
 
         [LuisIntent("")]
         [LuisIntent("None")]
@@ -34,17 +35,6 @@ namespace ClimaBot.Dialogs
         {
             await context.PostAsync("Este aplicativo foi desenvolvido por Sergio Luiz Machado para a maratona de programação Bots.");
             context.Wait(MessageReceived);
-        }
-
-        public bool TryFindTitle(LuisResult result, out ICollection<object> title)
-        {
-            if (result.TryFindEntity("city", out EntityRecommendation entity))
-            {
-                title = entity.Resolution.Values;
-                return true;
-            }
-            title = null;
-            return false;
         }
 
         [LuisIntent("BuscaPrevisao")]

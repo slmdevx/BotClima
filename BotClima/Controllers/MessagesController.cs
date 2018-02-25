@@ -1,8 +1,11 @@
-﻿using System.Net;
+﻿using System;
+using System.Configuration;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Luis;
 using Microsoft.Bot.Connector;
 
 namespace ClimaBot
@@ -16,11 +19,20 @@ namespace ClimaBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+
+            var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
+            var attributes = new LuisModelAttribute(
+                ConfigurationManager.AppSettings["LuisId"],
+                ConfigurationManager.AppSettings["LuisSubscriptionKey"]);
+
+            var service = new LuisService(attributes);
+
             if (activity.Type == ActivityTypes.Message)
             {
                 // Supressing the POST 15s Timeout error in some channels.
                 //await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
-                await Task.Factory.StartNew(() => Conversation.SendAsync(activity, () => new Dialogs.LocalidadeDialog()));
+                await Task.Factory.StartNew(() => Conversation.SendAsync(activity, () => new Dialogs.LocalidadeDialog(service)));
             }
             else
             {
