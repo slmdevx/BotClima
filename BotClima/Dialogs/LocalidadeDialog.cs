@@ -15,6 +15,7 @@ namespace ClimaBot.Dialogs
     {
         private string city;
         private string state;
+        private string forecastMsg;
         private const int numDaysForecast = 3;
 
         public LocalidadeDialog(ILuisService service) : base(service) { }
@@ -75,14 +76,18 @@ namespace ClimaBot.Dialogs
                                         {
                                             var forecastDataJsonString = await respForeCast.Content.ReadAsStringAsync();
                                             var forecast = Deserialize.FromJson(forecastDataJsonString);
-                                            await context.PostAsync($"Previsão do tempo para {city}, {state}");
+                                            await context.PostAsync($"Previsão do tempo para {city.ToUpper()}, {state.ToUpper()}");
+
+                                            forecastMsg = "";
                                             for (int days = 0; days < numDaysForecast; days++)
                                             {
-                                                await context.PostAsync($"Data: {forecast.Data[days].DateBr}");
-                                                await context.PostAsync($"Humidade - Mínima: {forecast.Data[days].Humidity.Min}; Máxima: {forecast.Data[days].Humidity.Max}");
-                                                await context.PostAsync($"Chuva - Precipitação: {forecast.Data[days].Rain.Precipitation}; Probabilidade: {forecast.Data[days].Rain.Probability}%");
-                                                await context.PostAsync($"Temperatura - Mínima: {forecast.Data[days].Temperature.Min}°; Máxima: {forecast.Data[days].Temperature.Max}°");
-                                            }
+                                                forecastMsg = forecastMsg + string.Format($"Data: {forecast.Data[days].DateBr}\n\r");
+                                                forecastMsg = forecastMsg + string.Format($"Humidade - Mínima: {forecast.Data[days].Humidity.Min}; Máxima: {forecast.Data[days].Humidity.Max}\n\r");
+                                                forecastMsg = forecastMsg + string.Format($"Chuva - Precipitação: {forecast.Data[days].Rain.Precipitation}; Probabilidade: {forecast.Data[days].Rain.Probability}%\n\r");
+                                                forecastMsg = forecastMsg + string.Format($"Temperatura - Mínima: {forecast.Data[days].Temperature.Min}°C; Máxima: {forecast.Data[days].Temperature.Max}°C\n\n");
+                                                await context.PostAsync(forecastMsg);
+                                                forecastMsg = "";
+                                            }                                            
                                         }
                                     }
                                 }
