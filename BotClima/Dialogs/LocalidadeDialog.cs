@@ -16,7 +16,7 @@ namespace ClimaBot.Dialogs
         private string city;
         private string state;
         private string forecastMsg;
-        private const int numDaysForecast = 3;
+        private const int numDaysForecast = 4;
 
         public LocalidadeDialog(ILuisService service) : base(service) { }
 
@@ -24,7 +24,9 @@ namespace ClimaBot.Dialogs
         [LuisIntent("None")]
         public async Task None(IDialogContext context, LuisResult result)
         {
-            string message = $"O significado de '{result.Query}' é desconhecido neste momento.";
+            string message = $"A expressão '{result.Query}' ainda é desconhecida por mim\n\r" +
+                              $"Se estiver buscando por um município, utilize os acentos.\n\r" +
+                              "Por exemplo: ao invés de 'macae', digite 'Macaé'.";
             await context.PostAsync(message);
             context.Wait(MessageReceived);
         }
@@ -76,7 +78,7 @@ namespace ClimaBot.Dialogs
                                         {
                                             var forecastDataJsonString = await respForeCast.Content.ReadAsStringAsync();
                                             var forecast = Deserialize.FromJson(forecastDataJsonString);
-                                            await context.PostAsync($"Previsão do tempo para {city.ToUpper()}, {state.ToUpper()}");
+                                            await context.PostAsync($"Previsão do tempo hoje + 3 dias para {city.ToUpper()}, {state.ToUpper()}");
 
                                             forecastMsg = "";
                                             for (int days = 0; days < numDaysForecast; days++)
